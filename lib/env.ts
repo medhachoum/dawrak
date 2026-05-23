@@ -29,7 +29,8 @@ const serverSchema = z.object({
   CRON_SECRET: z.string().min(16).optional(),
 
   // Optional Sentry DSN. When set, Sentry is initialized in instrumentation.ts.
-  SENTRY_DSN: z.string().url().optional(),
+  // Accepts empty string (disabled), a valid URL, or unset.
+  SENTRY_DSN: z.string().optional(),
 
   // Optional SMS provider config (Unifonic / Twilio). When unset, SMS is no-op.
   SMS_PROVIDER: z.enum(["none", "unifonic", "twilio", "log"]).default("none"),
