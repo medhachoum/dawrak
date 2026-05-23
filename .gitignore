@@ -23,8 +23,9 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
-.env
 .env*.local
+
+# DO NOT ignore .env — it is tracked with production config per request
 
 # vercel
 .vercel
