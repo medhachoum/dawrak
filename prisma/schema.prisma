@@ -1,0 +1,103 @@
+// Prisma schema for Dawrak (دَوْرَك)
+// Digital queue system for service businesses in the Arab world.
+// NOTE: SQLite does not support native enums, so status fields are strings
+// validated at the application layer via the constants in lib/constants.ts.
+// The schema is kept Postgres-compatible: switch the provider to "postgresql"
+// and update DATABASE_URL when deploying to production.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  members BusinessMember[]
+
+  @@index([email])
+}
+
+model BusinessMember {
+  id         String   @id @default(cuid())
+  userId     String
+  businessId String
+  // one of: owner | staff
+  role       String   @default("owner")
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, businessId])
+  @@index([userId])
+  @@index([businessId])
+}
+
+model Business {
+  id           String   @id @default(cuid())
+  name         String
+  nameAr       String
+  slug         String   @unique
+  logo         String?
+  primaryColor String   @default("#0F766E")
+  phone        String?
+  // IANA timezone, e.g. "Asia/Riyadh". Used for daily ticket reset boundaries.
+  timezone     String   @default("Asia/Riyadh")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt @default(now())
+
+  queues  Queue[]
+  members BusinessMember[]
+
+  @@index([slug])
+}
+
+model Queue {
+  id             String   @id @default(cuid())
+  businessId     String
+  name           String
+  // one of: active | paused | closed
+  status         String   @default("active")
+  maxCapacity    Int      @default(50)
+  avgServiceTime Int      @default(15) // minutes per customer
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt @default(now())
+
+  business Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  entries  QueueEntry[]
+
+  @@index([businessId])
+}
+
+model QueueEntry {
+  id            String    @id @default(cuid())
+  queueId       String
+  ticketNumber  Int
+  customerName  String
+  customerPhone String?
+  // one of: waiting | called | serving | completed | noshow
+  status        String    @default("waiting")
+  joinedAt      DateTime  @default(now())
+  calledAt      DateTime?
+  completedAt   DateTime?
+  // last time the customer's wait page was active (heartbeat from SSE/polling).
+  // Used by the cleanup job to mark stale waiting entries as noshow.
+  lastSeenAt    DateTime  @default(now())
+
+  queue Queue @relation(fields: [queueId], references: [id], onDelete: Cascade)
+
+  @@index([queueId, status])
+  @@index([queueId, ticketNumber])
+  @@index([queueId, customerPhone, status])
+  @@index([status, lastSeenAt])
+}

@@ -1,0 +1,32 @@
+# Local artifacts that should not be sent to the Docker build context.
+.git
+.github
+.next
+.vercel
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.env.*.local
+.env.local
+prisma/dev.db
+prisma/dev.db-journal
+prisma/migrations/dev_*/
+
+# Test / dev tooling output
+coverage
+.nyc_output
+playwright-report
+test-results
+
+# Editor / OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Build inputs we don't need
+README.md
+CHANGELOG.md
+docs
