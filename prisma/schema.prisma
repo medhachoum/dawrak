@@ -10,10 +10,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  // For local SQLite dev only, switch provider to "sqlite" temporarily.
-  // All field types in this schema are valid in both SQLite and Postgres.
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
